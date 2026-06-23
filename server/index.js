@@ -2,6 +2,7 @@ import 'dotenv/config';
 import fs from 'fs';
 import http from 'http';
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { registerApiRoutes } from './api.js';
@@ -10,9 +11,35 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname.endsWith('.vercel.app')) return true;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+    if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) return true;
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
 async function start() {
   const app = express();
   app.set('trust proxy', 1);
+  app.use(
+    cors({
+      origin(origin, callback) {
+        if (isAllowedOrigin(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
+    }),
+  );
   app.use(express.json({ limit: '16kb' }));
 
   registerApiRoutes(app);

@@ -1,4 +1,5 @@
-const API_BASE = '/api';
+const API_ORIGIN = import.meta.env.VITE_API_URL?.replace(/\/$/, '') ?? '';
+const API_BASE = API_ORIGIN ? `${API_ORIGIN}/api` : '/api';
 
 async function parseResponse(response) {
   const text = await response.text();
